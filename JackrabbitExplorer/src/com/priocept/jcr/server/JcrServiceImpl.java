@@ -48,6 +48,7 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	private final static String XPATH_SEARCH = "xpathSearch";
 	private final static String SQL_SEARCH = "sqlSearch";
 	private final static String TEMP_FILES = "temp_files/";
+	private static String REAL_ABSOLUTE_PATH = "";
 
 	protected Session getJcrSession() throws Exception {
 		if (null == getThreadLocalRequest().getSession().getAttribute("session")) {
@@ -58,12 +59,12 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 
 	public JcrServiceImpl() {
 		super();
-		cleanAllTempFiles();
 	}
 	
 	private void cleanAllTempFiles() {
-		deleteDirectory(new File(TEMP_FILES));
-		new File (TEMP_FILES).mkdir();
+		REAL_ABSOLUTE_PATH = getServletContext().getRealPath("/");
+		deleteDirectory(new File(REAL_ABSOLUTE_PATH + TEMP_FILES));
+		new File (REAL_ABSOLUTE_PATH + TEMP_FILES).mkdir();
 	}
 	
 	/**
@@ -137,6 +138,7 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	 *  Login to repository and store session as HTTP session attribute
 	 */
 	public Boolean login(String rmiUrl, String workSpace, String userName, String password) throws SerializedException {
+		cleanAllTempFiles();
 		try {
 			getThreadLocalRequest().getSession().setAttribute("session", getNewSession(rmiUrl, workSpace, userName, password));
 			
@@ -282,7 +284,7 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	 */
 	public String addNewNode(String path, String newNodeName, String primaryNodeType, String jcrContentFileName, boolean cancel) throws SerializedException {
 		if (cancel) {
-			deleteDirectory(new File(TEMP_FILES + getThreadLocalRequest().getSession().getId()));
+			deleteDirectory(new File(REAL_ABSOLUTE_PATH + TEMP_FILES + getThreadLocalRequest().getSession().getId()));
 			return "Removed files";
 		}
 		if (null == path || path.equals("") || null == primaryNodeType || primaryNodeType.equals("")) {
@@ -303,7 +305,7 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 				 Node resNode = newNode.addNode("jcr:content", "nt:resource");
 		        resNode.setProperty ("jcr:mimeType", "image/jpeg");
 		        resNode.setProperty ("jcr:encoding", "");
-		        resNode.setProperty ("jcr:data", new FileInputStream (TEMP_FILES + 
+		        resNode.setProperty ("jcr:data", new FileInputStream (REAL_ABSOLUTE_PATH + TEMP_FILES + 
 		        		getThreadLocalRequest().getSession().getId() + "/" + jcrContentFileName));
 		        
 			}
@@ -313,7 +315,7 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 			log.info("Node not added. " + e.getMessage());
 			throw new SerializedException("Node not added. " + e.getMessage());
 		} finally {
-			deleteDirectory(new File(TEMP_FILES + getThreadLocalRequest().getSession().getId()));
+			deleteDirectory(new File(REAL_ABSOLUTE_PATH + TEMP_FILES + getThreadLocalRequest().getSession().getId()));
 		}
 
 		return "New node successfully created.";
