@@ -80,7 +80,7 @@
   
   <!-- Default page to serve -->
   <welcome-file-list>
-    <welcome-file>Jackrabbitexplorer.html</welcome-file>
+    <welcome-file>JackrabbitExplorer.html</welcome-file>
   </welcome-file-list>
 
 </web-app>
