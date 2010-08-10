@@ -15,6 +15,7 @@ import com.smartgwt.client.widgets.events.CloseClickHandler;
 import com.smartgwt.client.widgets.events.CloseClientEvent;
 import com.smartgwt.client.widgets.form.DynamicForm;
 import com.smartgwt.client.widgets.form.events.SubmitValuesHandler;
+import com.smartgwt.client.widgets.form.fields.ComboBoxItem;
 import com.smartgwt.client.widgets.form.fields.SelectItem;
 import com.smartgwt.client.widgets.form.fields.SpacerItem;
 import com.smartgwt.client.widgets.form.fields.SubmitItem;
@@ -59,7 +60,7 @@ public class AddNewNode {
 		newNodeName.setWidth(250);
 		newNodeName.setRequired(true);
 		
-		final SelectItem newNodeType = new SelectItem();
+		final ComboBoxItem newNodeType = new ComboBoxItem();
 		if (!AvailableNodeTypesServiceCallback.valueMap.containsKey(AvailableNodeTypesServiceCallback.DEFAULT_NODE_TYPE)
 				&& !AvailableNodeTypesServiceCallback.valueMap.containsValue(AvailableNodeTypesServiceCallback.DEFAULT_NODE_TYPE)) {
 			AvailableNodeTypesServiceCallback.valueMap.put(AvailableNodeTypesServiceCallback.DEFAULT_NODE_TYPE, AvailableNodeTypesServiceCallback.DEFAULT_NODE_TYPE);
