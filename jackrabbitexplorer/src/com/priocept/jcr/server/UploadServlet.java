@@ -120,7 +120,7 @@ public class UploadServlet extends HttpServlet {
 					InputStream in = null;
 					try {
 						in = item.openStream();
-						writeToFile(request.getSession().getId() + "/" +fileName, in, true);
+						writeToFile(request.getSession().getId() + "/" +fileName, in, true, request.getSession().getServletContext().getRealPath("/"));
 					} catch (Exception e) {
 //						e.printStackTrace();
 						log.error("Fail to upload " + fileName);
@@ -167,7 +167,7 @@ public class UploadServlet extends HttpServlet {
 		}
 	}
 	
-	public static void writeToFile(String fileName, InputStream iStream, boolean createDir) throws IOException {
+	public static void writeToFile(String fileName, InputStream iStream, boolean createDir, String servletRealPath) throws IOException {
 		String me = "FileUtils.WriteToFile";
 		if (fileName == null) {
 			throw new IOException(me + ": filename is null");
@@ -176,7 +176,7 @@ public class UploadServlet extends HttpServlet {
 			throw new IOException(me + ": InputStream is null");
 		}
 
-		File theFile = new File("temp_files/" + fileName);
+		File theFile = new File(servletRealPath + "temp_files/" + fileName);
 
 		// Check if a file exists.
 		if (theFile.exists()) {
