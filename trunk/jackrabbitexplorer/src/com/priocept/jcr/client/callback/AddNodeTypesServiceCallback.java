@@ -12,7 +12,8 @@ import com.smartgwt.client.util.SC;
 public class AddNodeTypesServiceCallback implements AsyncCallback<Boolean>
 {
 	public void onSuccess(Boolean result) {
-		SC.say("Added CND node types successfully.");
+//		SC.say("Added CND node types successfully.");
+		SC.warn("Custom node type registering not available over RMI yet.");
 		JackrabbitExplorer.hideLoadingImg();		
 	}
 	
