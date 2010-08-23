@@ -235,11 +235,11 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 					Property property = propertyIterator.nextProperty();
 					//added a Binary Value text to the jcr:data property, as displaying raw binary in the value cell isn't desirable
 					if (null != property.getName() && property.getName().equalsIgnoreCase("jcr:data")) {
-						properties.put(property.getName() + " (Double click to open)", "Binary Value");
+						properties.put(property.getName() + " (Click to open)", "Binary Value");
 						
 						//Any property of value which starts with http:// will be openable in the frontend 
 					} else if (null != property.getValue() && property.getValue().getString().startsWith("http://")) {
-							properties.put(property.getName() + " (Double click to open)", property.getValue().getString());
+							properties.put(property.getName() + " (Click to open)", property.getValue().getString());
 					} else {
 						properties.put(property.getName(), property.getValue().getString());
 					}

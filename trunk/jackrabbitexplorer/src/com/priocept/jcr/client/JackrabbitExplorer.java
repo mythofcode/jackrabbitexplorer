@@ -8,7 +8,6 @@ import java.util.Map;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
-import com.priocept.jcr.client.callback.AddNodeTypesServiceCallback;
 import com.priocept.jcr.client.callback.CRUDServiceCallback;
 import com.priocept.jcr.client.callback.DefaultLoginDetailsServiceCallback;
 import com.priocept.jcr.client.callback.GetBrowsableContentFilterRegexsServiceCallback;
@@ -36,14 +35,12 @@ import com.smartgwt.client.widgets.HTMLPane;
 import com.smartgwt.client.widgets.Img;
 import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.Window;
-import com.smartgwt.client.widgets.events.DoubleClickHandler;
 import com.smartgwt.client.widgets.events.DropHandler;
 import com.smartgwt.client.widgets.form.DynamicForm;
 import com.smartgwt.client.widgets.form.events.SubmitValuesHandler;
 import com.smartgwt.client.widgets.form.fields.PasswordItem;
 import com.smartgwt.client.widgets.form.fields.SpacerItem;
 import com.smartgwt.client.widgets.form.fields.SubmitItem;
-import com.smartgwt.client.widgets.form.fields.TextAreaItem;
 import com.smartgwt.client.widgets.form.fields.TextItem;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
@@ -242,9 +239,14 @@ public class JackrabbitExplorer implements EntryPoint {
 	    int i = 0;
 	    while (it.hasNext()) {
 	    	Map.Entry<String, String> pairs = (Map.Entry<String, String>)it.next();
-	        listGridRecord = new ListGridRecord(); 
-	        listGridRecord.setAttribute("property", pairs.getKey());
-	        listGridRecord.setAttribute("value", pairs.getValue());
+	        listGridRecord = new ListGridRecord();
+	        if (pairs.getKey().contains("jcr:data")) {
+		        listGridRecord.setAttribute("property", "<b>" + pairs.getKey() + "</b>");
+		        listGridRecord.setAttribute("value", "<b>" + pairs.getValue() + "</b>");
+	        } else {
+		        listGridRecord.setAttribute("property", pairs.getKey());
+		        listGridRecord.setAttribute("value", pairs.getValue());
+	        }
 	        propertiesListGridRecords[i] = listGridRecord;
 	        i++;
 	    }
@@ -476,8 +478,6 @@ public class JackrabbitExplorer implements EntryPoint {
     		service.getNodeTree(selectedSearchResultTreeGrid.getSelectedRecord().getAttribute("path"), new GetNodeTreeServiceCallback(jackrabbitExplorer));
     	}
     }
-    
-
 	
 	private Tab createPropertiesTab() {
 		Tab propertiesTab = new Tab();
@@ -502,7 +502,6 @@ public class JackrabbitExplorer implements EntryPoint {
         propertiesListGrid.setData(new ListGridRecord[] {listGridRecord});
         propertiesListGrid.addCellSavedHandler(new PropertiesCellSavedHandler(this));
         propertiesListGrid.addCellClickHandler(new PropertiesCellClickHandler());
-        propertiesListGrid.addDoubleClickHandler(new PropertiesDoubleClickHandler());
         propertiesListGrid.setContextMenu(createPropertyRightClickMenu());
         propertiesTab.setPane(propertiesListGrid);
         return propertiesTab;
@@ -533,59 +532,28 @@ public class JackrabbitExplorer implements EntryPoint {
     	public void onCellClick(com.smartgwt.client.widgets.grid.events.CellClickEvent event) {
     		selectedPropertyListGridRecord = event.getRecord(); 
     		String propertyName = selectedPropertyListGridRecord.getAttribute("property");
-        	if (propertyName.startsWith("jcr:data")) {
+        	if (propertyName.contains("jcr:data")) {
         		propertiesListGrid.setCanEdit(false);
+        		
+        		String selectedNodePath = cellMouseDownTreeGrid.getSelectedRecord().getAttribute("path");
+            		String mimeType = "";
+            		for (int i = 0; i < propertiesListGridRecords.length; i++) {
+            			if ("jcr:mimeType".equalsIgnoreCase(propertiesListGridRecords[i].getAttribute("property"))) {
+            				mimeType = propertiesListGridRecords[i].getAttribute("value");
+            			}
+    				}
+            		if (mimeType.startsWith("image")) {
+            			createBinaryImgWindow(selectedNodePath, selectedNodePath + "/" +  "jcr:data", mimeType);
+            		} else {
+            			com.google.gwt.user.client.Window.Location.replace(BINARY_SERVLET_PATH + selectedNodePath + "/" +  "jcr:data" 
+                				+ "&rmiUrl=" + rmiUrlTxt.getValue().toString() + 
+                				"&workSpace=" + workspaceTxt.getValue().toString() + "&mimeType=" + mimeType); 
+            		}
+            		return;
         	} else {
         		propertiesListGrid.setCanEdit(true);
         	}
     	}
-    }
-    
-    class PropertiesDoubleClickHandler implements DoubleClickHandler {
-    	public void onDoubleClick(com.smartgwt.client.widgets.events.DoubleClickEvent event) {
-    		String propertyName = selectedPropertyListGridRecord.getAttribute("property");
-    		String propertyValue = selectedPropertyListGridRecord.getAttribute("value");
-    		String selectedNodePath = cellMouseDownTreeGrid.getSelectedRecord().getAttribute("path");
-        	if (propertyName.startsWith("jcr:data")) {
-        		propertiesListGrid.setCanEdit(false);
-        		String mimeType = "";
-        		for (int i = 0; i < propertiesListGridRecords.length; i++) {
-        			if ("jcr:mimeType".equalsIgnoreCase(propertiesListGridRecords[i].getAttribute("property"))) {
-        				mimeType = propertiesListGridRecords[i].getAttribute("value");
-        			}
-				}
-        		if (mimeType.startsWith("image")) {
-        			createBinaryImgWindow(selectedNodePath, selectedNodePath + "/" +  "jcr:data", mimeType);
-        		} else {
-            		createBianryLinkWindow(selectedNodePath, BINARY_SERVLET_PATH + selectedNodePath + "/" +  "jcr:data" 
-            				+ "&rmiUrl=" + rmiUrlTxt.getValue().toString() + 
-        				"&workSpace=" + workspaceTxt.getValue().toString() + "&mimeType=" + mimeType);
-        		}
-        		return;
-        	} else if (propertyValue.matches(browsableContentFilterRegex)) {
-        		createRemoteWindow("Remote Url", propertyValue);
-        	} 
-        	propertiesListGrid.setCanEdit(true);
-    	}
-    }
-    
-    private Window createBianryLinkWindow(String title, String url) {
-    	Window remoteWindow = new Window();
-    	HTMLPane htmlPane = new HTMLPane();
-    	htmlPane.setContents("<a href='" + url + "' target='_blank'>" + title + "</a>");
-    	htmlPane.setContentsType(ContentsType.PAGE);
-    	remoteWindow.addItem(htmlPane);
-    	remoteWindow.setTitle(title);
-    	remoteWindow.setShowMaximizeButton(true);
-    	remoteWindow.setCanDragReposition(true);
-    	remoteWindow.setCanDragResize(true);
-    	remoteWindow.setHeight("40%");
-    	remoteWindow.setWidth("40%");
-    	remoteWindow.setAutoCenter(true);
-    	remoteWindow.setShowResizeBar(true);
-    	remoteWindow.setDefaultResizeBars(LayoutResizeBarPolicy.MARKED);
-    	remoteWindow.show();
-    	return remoteWindow;
     }
     
     private Window createRemoteWindow(String title, String url) {
@@ -611,7 +579,9 @@ public class JackrabbitExplorer implements EntryPoint {
     	Window binaryWindow = new Window();
 		Img img = new Img(BINARY_SERVLET_PATH + path + "&rmiUrl=" + rmiUrlTxt.getValue().toString() + 
 				"&workSpace=" + workspaceTxt.getValue().toString() + "&mimeType=" + mimeType);
-		img.setImageType(ImageStyle.CENTER);
+		img.setImageType(ImageStyle.STRETCH);
+		img.setHeight100();
+		img.setWidth100();
 		binaryWindow.addItem(img);
 		binaryWindow.setTitle(title);
 		binaryWindow.setShowMaximizeButton(true);
@@ -621,7 +591,7 @@ public class JackrabbitExplorer implements EntryPoint {
 		binaryWindow.setWidth("40%");
 		binaryWindow.setAutoCenter(true);
 		binaryWindow.setShowResizeBar(true);
-		binaryWindow.setDefaultResizeBars(LayoutResizeBarPolicy.MARKED);
+		//binaryWindow.setDefaultResizeBars(LayoutResizeBarPolicy.MARKED);
 		binaryWindow.show();
     	return binaryWindow;
     }
