@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#Getting started
 
 Jackrabbitexplorer is a rich web application tool to explore and administer a jackrabbit repository via RMI.
 
