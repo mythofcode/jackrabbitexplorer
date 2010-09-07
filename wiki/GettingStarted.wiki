@@ -1,23 +1,38 @@
 #summary One-sentence summary of this page.
 
-Jackrabbitexplorer is a rich web application tool to explore and administer a jackrabbit repository via RMI
+Jackrabbitexplorer is a rich web application tool to explore and administer a jackrabbit repository via RMI.
 
 
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Getting Started
-  * Configuration
 
 ----
 
-Getting Started
+= Getting Started =
 
-First thing needed is a jackrabbit server up and running
+Jackrabbit server
+
+First thing needed is a jackrabbit server up and running.
+
+A good way to get started quickly is to download the standalone version of jackrabbit
+http://jackrabbit.apache.org/downloads.html.
+Which is basically a jackrabbit configured with tomcat ready to go.
+
+Start the standalone server with
+{{{
+java -jar jackrabbit-standalone-2.1.0.jar --port 8082
+}}}
+There will be a jackrabbit start page at http://localhost:8082/ once running.
+From there you can click the populate link to add some random binary content to you jackrabbit repository
 
 ----
+
+Jackrabbit Explorer
+
+To start using jackrabbit Explorer right away download the latest jackrabbitexplorer.war file and put that in a java container such as tomcat. I won't explain that here.
+
+Once your java container is running. Point your browser to http://localhost:8080/jackrabbitexplorer
+
+(port 8080 is the default port)
+
 
 Configuration
 
