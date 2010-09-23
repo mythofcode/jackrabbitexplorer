@@ -22,5 +22,6 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/smartgwt-2.2.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/smartgwt-skins-2.2.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jackrabbit-jcr-rmi-2.1.0.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/junit-4.8.2.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
