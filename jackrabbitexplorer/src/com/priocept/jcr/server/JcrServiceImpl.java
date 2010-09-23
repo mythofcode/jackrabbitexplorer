@@ -315,7 +315,9 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 			log.info("Node not added. " + e.getMessage());
 			throw new SerializedException("Node not added. " + e.getMessage());
 		} finally {
-			deleteDirectory(new File(REAL_ABSOLUTE_PATH + TEMP_FILES + getThreadLocalRequest().getSession().getId()));
+			if (null != getThreadLocalRequest()) {
+				deleteDirectory(new File(REAL_ABSOLUTE_PATH + TEMP_FILES + getThreadLocalRequest().getSession().getId()));
+			}
 		}
 
 		return "New node successfully created.";
@@ -464,26 +466,28 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 		return "Successfully deleted. " + sourcePath;
 	}
 
+	//not used
 	public String saveNodeDetails(String sourcePath, JcrNode jcrNode) throws SerializedException {
-		if (null == jcrNode) {
-			throw new SerializedException("Details not saved.");
-		}
-		try {
-			Item item = getJcrSession().getItem(sourcePath);
-			if (null == item && !(item instanceof Node)) {
-				return null;
-			}
-			Node pathNode = (Node) item;
-			pathNode.setProperty("name", jcrNode.getName());
-			pathNode.setProperty("path", jcrNode.getPath());
-			pathNode.setProperty("primaryNodeType", jcrNode.getPrimaryNodeType());
-			getJcrSession().save();
-		} catch (Exception e) {
-			log.info("Node details not saved. " + e.getMessage());
-			throw new SerializedException("Node details not saved. " + e.getMessage());
-		}
-
-		return "Successfully saved. " + sourcePath;
+//		if (null == jcrNode) {
+//			throw new SerializedException("Details not saved.");
+//		}
+//		try {
+//			Item item = getJcrSession().getItem(sourcePath);
+//			if (null == item && !(item instanceof Node)) {
+//				return null;
+//			}
+//			Node pathNode = (Node) item;
+//			pathNode.setProperty("name", jcrNode.getName());
+//			pathNode.setProperty("path", jcrNode.getPath());
+//			pathNode.setProperty("primaryNodeType", jcrNode.getPrimaryNodeType());
+//			getJcrSession().save();
+//		} catch (Exception e) {
+//			log.info("Node details not saved. " + e.getMessage());
+//			throw new SerializedException("Node details not saved. " + e.getMessage());
+//		}
+//
+//		return "Successfully saved. " + sourcePath;
+		return "";
 	}
 
 	// Properties
@@ -583,8 +587,8 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	 * @return String success message
 	 * @throws SerializedException
 	 */
-	public String savePropertyBinaryValue(String sourcePath, String property, InputStream value) throws SerializedException {
-		if (null == sourcePath || null == property || null == value) {
+	public String savePropertyBinaryValue(String sourcePath, String property, InputStream inputStream) throws SerializedException {
+		if (null == sourcePath || null == property || null == inputStream) {
 			throw new SerializedException("Property not saved.");
 		}
 		try {
@@ -593,7 +597,7 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 				return null;
 			}
 			Node pathNode = (Node) item;
-			pathNode.setProperty(property, (InputStream) value);
+			pathNode.setProperty(property, (InputStream) inputStream);
 
 			getJcrSession().save();
 		} catch (Exception e) {
