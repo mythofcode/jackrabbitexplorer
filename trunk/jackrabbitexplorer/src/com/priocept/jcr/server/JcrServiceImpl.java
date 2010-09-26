@@ -26,8 +26,9 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.rmi.repository.URLRemoteRepository;
-import org.apache.log4j.Logger;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.priocept.jcr.client.JcrService;
@@ -43,7 +44,7 @@ import com.priocept.jcr.client.domain.LoginDetails;
 public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	private static final long serialVersionUID = 8840001785942628602L;
 	
-	private static Logger log = Logger.getLogger(JcrServiceImpl.class);
+	private Log log = LogFactory.getLog(this.getClass());
 	private final static String FULL_TEXT_SEARCH = "fullTextSearch";
 	private final static String XPATH_SEARCH = "xpathSearch";
 	private final static String SQL_SEARCH = "sqlSearch";
