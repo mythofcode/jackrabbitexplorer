@@ -12,7 +12,7 @@ First thing needed is a jackrabbit server up and running.
 
 A good way to get started quickly is to download the standalone version of jackrabbit
 http://jackrabbit.apache.org/downloads.html.
-Which is basically a jackrabbit configured with tomcat ready to go.
+Which is basically a jackrabbit instance configured with tomcat ready to go.
 
 Start the standalone server with
 {{{
@@ -25,7 +25,7 @@ From there you can click the populate link to add some random binary content to 
 
 Jackrabbit Explorer
 
-To start using jackrabbit Explorer right away download the latest jackrabbitexplorer.war file and put that in a java container such as tomcat. I won't explain that here.
+To start using jackrabbit Explorer right away download the latest jackrabbitexplorer.war file and put that in a servlet container such as Tomcat or Jetty. I won't explain that here.
 
 Once your java container is running. Point your browser to http://localhost:8080/jackrabbitexplorer
 
