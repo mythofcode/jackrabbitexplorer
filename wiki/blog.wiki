@@ -1,1 +1,0 @@
-<wiki:gadget url="http://google-code-feed-gadget.googlecode.com/svn/trunk/gadget.xml" up_feeds="http://google-code-featured.blogspot.com/atom.xml" width="500" height="600" border="0"/>
