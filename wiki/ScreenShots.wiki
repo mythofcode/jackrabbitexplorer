@@ -1,0 +1,14 @@
+#summary Screenshots of the web user interface for Jackrabbit Explorer.
+
+= Introduction =
+
+This page introduces the various user interface features of Jackrabbit Explorer.
+
+= Details =
+
+
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
