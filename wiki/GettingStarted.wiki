@@ -44,12 +44,15 @@ e.g.
 	</context>
 }}}
 
-Icon images can be changed in the /WEB_INF/nodeTypeIcons.properties
-New icons can be added as well for custom node types
+Icon images associated with node types can be changed in the /WEB_INF/nodeTypeIcons.properties file.
+New icons can be added to /images. In addition custom node types can be added to the properties file.
 
 e.g. 
 {{{
 rep\:system=icons/operation.png
 }}}
 
-The key the node type and the value is the image path /images.
+rep:system is is the node type.
+icons/operation.png is the image path from jackrabbitexplorer/images/
+
+_Note: the backslash escapes the semi colon in the node type. i.e. rep\:system_
