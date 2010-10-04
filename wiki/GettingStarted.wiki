@@ -41,7 +41,7 @@ e.g.
 	<context-param>
 	  <param-name>rmiUrl</param-name>
 	  <param-value>http://localhost:8082/rmi</param-value>
-	</context
+	</context>
 }}}
 
 Icon images can be changed in the /WEB_INF/nodeTypeIcons.properties
