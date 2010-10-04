@@ -18,4 +18,4 @@
 
 2. What cannot Jackrabbit Explorer do? 
 
- * Cannot register custom node types over RMI. This feature has not been implemented in JCR 2.0 as yet. To register custom node types use the The JcrImportExport tool [http://svn.apache.org/repos/asf/jackrabbit/sandbox/jackrabbit-jcr-import-export-tool/]
+ * Cannot register custom node types over RMI. This feature has not been implemented in JCR 2.0 as yet. To register custom node types use the [The JcrImportExport tool|http://svn.apache.org/repos/asf/jackrabbit/sandbox/jackrabbit-jcr-import-export-tool/]
