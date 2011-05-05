@@ -676,8 +676,12 @@ public class JackrabbitExplorer implements EntryPoint {
 	        	if (loginForm.validate()) {
 		    		loginWindow.hide();
 		        	showLoadingImg();
-		        	service.login(rmiUrlTxt.getValue().toString(), workspaceTxt.getValue().toString(),
-		        			usernameTxt.getValue().toString(), passwordTxt.getValue().toString(), new LoginServiceCallback(jackrabbitExplorer));
+		        	String rmiUrlText = rmiUrlTxt.getValue().toString(); 
+		        	String workspaceText = workspaceTxt.getValue().toString();
+		        	String usernameText = usernameTxt.getValue().toString();
+		        	String passwordText = passwordTxt.getValue() != null ? passwordTxt.getValue().toString() : "";
+		        	
+		        	service.login(rmiUrlText, workspaceText,usernameText, passwordText, new LoginServiceCallback(jackrabbitExplorer));
 	        	}
 	      }  
 	    };
