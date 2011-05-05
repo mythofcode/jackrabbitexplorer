@@ -1,0 +1,8 @@
+#summary Requirements for building this projects.
+
+= Requirements =
+
+Jackrabbitexplorer is built using [http://ant.apache.org/ Apache Ant] and is tested against the latest release, 1.8.2.
+
+It uses the [http://code.google.com/webtoolkit/ Google Web Toolkit] and requires version [http://code.google.com/webtoolkit/versions.html 2.2.0].
+It does not currently build with the latest release, 2.3.0.
