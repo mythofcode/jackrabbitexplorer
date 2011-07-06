@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -304,11 +305,16 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 			Node newNode = pathNode.addNode(newNodeName, primaryNodeType);
 			if (primaryNodeType.contains("file") || primaryNodeType.contains("File")) {
 				 Node resNode = newNode.addNode("jcr:content", "nt:resource");
-		        resNode.setProperty ("jcr:mimeType", "image/jpeg");
-		        resNode.setProperty ("jcr:encoding", "");
-		        resNode.setProperty ("jcr:data", new FileInputStream (REAL_ABSOLUTE_PATH + TEMP_FILES + 
-		        		getThreadLocalRequest().getSession().getId() + "/" + jcrContentFileName));
-		        
+				 
+				 //Fixes: http://code.google.com/p/jackrabbitexplorer/issues/detail?id=19
+				 //Must ascertain MIME type.
+				 MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
+				 String mimeType = mimeTypesMap.getContentType(jcrContentFileName);
+				 
+				 resNode.setProperty ("jcr:mimeType", mimeType);
+				 resNode.setProperty ("jcr:encoding", "");
+				 resNode.setProperty ("jcr:data", new FileInputStream (REAL_ABSOLUTE_PATH + TEMP_FILES +
+						 getThreadLocalRequest().getSession().getId() + "/" + jcrContentFileName));
 			}
 			
 			getJcrSession().save();
