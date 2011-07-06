@@ -545,9 +545,10 @@ public class JackrabbitExplorer implements EntryPoint {
             		if (mimeType.startsWith("image")) {
             			createBinaryImgWindow(selectedNodePath, selectedNodePath + "/" +  "jcr:data", mimeType);
             		} else {
-            			com.google.gwt.user.client.Window.Location.replace(BINARY_SERVLET_PATH + selectedNodePath + "/" +  "jcr:data" 
+            			com.google.gwt.user.client.Window.open(BINARY_SERVLET_PATH + selectedNodePath + "/" +  "jcr:data" 
                 				+ "&rmiUrl=" + rmiUrlTxt.getValue().toString() + 
-                				"&workSpace=" + workspaceTxt.getValue().toString() + "&mimeType=" + mimeType); 
+                				"&workSpace=" + workspaceTxt.getValue().toString() + "&mimeType=" + mimeType, 
+                				"_blank", "toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no"); 
             		}
             		return;
         	} else {
