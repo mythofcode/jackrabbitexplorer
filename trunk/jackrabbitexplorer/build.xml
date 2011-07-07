@@ -55,7 +55,7 @@
 			</classpath>
 			<jvmarg value="-Xmx600M"/>
 			<arg value="-startupUrl"/>
-			<arg value="jackrabbitexplorer.html"/>
+			<arg value="JackrabbitExplorer.html"/>
 			<!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
 			<arg value="com.priocept.jcr.jackrabbitexplorer"/>
 		</java>
