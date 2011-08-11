@@ -26,12 +26,16 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.core.TransientRepository;
 import org.apache.jackrabbit.rmi.repository.URLRemoteRepository;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import com.priocept.jcr.client.ConnectionProperties;
 import com.priocept.jcr.client.JcrService;
 import com.priocept.jcr.client.SerializedException;
 import com.priocept.jcr.client.domain.JcrNode;
@@ -95,15 +99,19 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	public LoginDetails getDefaultLoginDetails() throws SerializedException {
 		LoginDetails loginDetails;
 		try {
-			String rmiUrl = getServletContext().getInitParameter("rmiUrl");
-			String workSpace = getServletContext().getInitParameter("workSpace");
-			String userName = getServletContext().getInitParameter("userName");
-			String password = getServletContext().getInitParameter("password");
+			Map<String, String> connectionProperties = getConnectionProperties();
 			loginDetails = new LoginDetails();
-			loginDetails.setRmiUrl(rmiUrl);
-			loginDetails.setWorkSpace(workSpace);
-			loginDetails.setUserName(userName);
-			loginDetails.setPassword(password);
+			loginDetails.setSupportsLocalRepository(Boolean.parseBoolean(connectionProperties.get(ConnectionProperties.SUPPORT_LOCAL.key)));
+			loginDetails.setHomeDirPath(connectionProperties.get(ConnectionProperties.DEFAULT_LOCAL_DIR.key));
+			loginDetails.setConfigFilePath(connectionProperties.get(ConnectionProperties.DEFAULT_LOCAL_FILE.key));
+			loginDetails.setSupportsJndiRepository(Boolean.parseBoolean(connectionProperties.get(ConnectionProperties.SUPPORT_JNDI.key)));
+			loginDetails.setJndiContext(connectionProperties.get(ConnectionProperties.DEFAULT_JNDI_CONTEXT.key));
+			loginDetails.setJndiName(connectionProperties.get(ConnectionProperties.DEFAULT_JNDI_NAME.key));
+			loginDetails.setSupportsRmiRepository(Boolean.parseBoolean(connectionProperties.get(ConnectionProperties.SUPPORT_RMI.key)));
+			loginDetails.setRmiUrl(connectionProperties.get(ConnectionProperties.DEFAULT_RMI_URL.key));
+			loginDetails.setWorkSpace(connectionProperties.get(ConnectionProperties.DEFAULT_WORKSPACE.key));
+			loginDetails.setUserName(connectionProperties.get(ConnectionProperties.DEFAULT_USERNAME.key));
+			loginDetails.setPassword(connectionProperties.get(ConnectionProperties.DEFAULT_PASSWORD.key));			
 			getNodeTypeIcons();
 		} catch (Exception e) {
 			log.info("Failed fetching default login details fron web descriptor. " + e.getMessage());
@@ -118,6 +126,59 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 
 	/**
 	 * 
+	 * @param configFilePath
+	 * @param homeDirPath
+	 * @param workSpace
+	 * @param userName
+	 * @param password
+	 * @return JCR Session
+	 * @throws SerializedException
+	 */
+	public Session getNewLocalSession(String configFilePath, String homeDirPath, String workSpace, String userName, String password) throws Exception
+	{
+		try
+		{
+			Repository repository = new TransientRepository(configFilePath, homeDirPath);
+			SimpleCredentials creds = new SimpleCredentials(userName, password
+					.toCharArray());
+			return repository.login(creds, workSpace);
+		}
+		catch (Exception e)
+		{
+			log.info("Failed Login. " + e.getMessage());
+			throw new SerializedException(e.getMessage());
+		}
+	}	
+	
+	/**
+	 * 
+	 * @param jndiName
+	 * @param jndiContext
+	 * @param workSpace
+	 * @param userName
+	 * @param password
+	 * @return JCR Session
+	 * @throws SerializedException
+	 */
+	public Session getNewSessionViaJndi(String jndiName, String jndiContext, String workSpace, String userName, String password) throws SerializedException
+	{
+		try
+		{
+			InitialContext context = new InitialContext();
+			Context environment = (Context) context.lookup(jndiContext);
+			Repository repository = (Repository) environment.lookup(jndiName);
+			SimpleCredentials creds = new SimpleCredentials(userName, password.toCharArray());
+			return repository.login(creds, workSpace);
+		}
+		catch (Exception e)
+		{
+			log.info("Failed Login. " + e.getMessage());
+			throw new SerializedException(e.getMessage());
+		}
+	}
+
+	/**
+	 * 
 	 * @param rmiUrl
 	 * @param workSpace
 	 * @param userName
@@ -125,7 +186,8 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	 * @return JCR Session
 	 * @throws SerializedException
 	 */
-	public Session getNewSession(String rmiUrl, String workSpace, String userName, String password) throws SerializedException {
+	public Session getNewSessionViaRmi(String rmiUrl, String workSpace, String userName, String password) throws SerializedException
+	{
 			try {
 				Repository repository = new URLRemoteRepository(rmiUrl);
 				SimpleCredentials creds = new SimpleCredentials(userName, password.toCharArray());
@@ -136,23 +198,71 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 			}
 	}
 	
-	/**
-	 *  Login to repository and store session as HTTP session attribute
-	 */
-	public Boolean login(String rmiUrl, String workSpace, String userName, String password) throws SerializedException {
-		cleanAllTempFiles();
-		try {
-			getThreadLocalRequest().getSession().setAttribute("session", getNewSession(rmiUrl, workSpace, userName, password));
-			
-		} catch (Exception e) {
+//	/**
+//	 *  Login to repository and store session as HTTP session attribute
+//	 */
+//	public Boolean login(String rmiUrl, String workSpace, String userName, String password) throws SerializedException {
+//		cleanAllTempFiles();
+//		try {
+//			getThreadLocalRequest().getSession().setAttribute("session", getNewSession(rmiUrl, workSpace, userName, password));
+//			
+//		} catch (Exception e) {
+//			log.info("Failed Login. " + e.getMessage());
+//			throw new SerializedException(e.getMessage());
+//		}
+//		return true;
+//	}
+	
+	public Boolean loginLocal(String configFilePath, String homeDirPath, String workSpace, String userName,
+			String password) throws Exception
+	{
+		try
+		{
+			getThreadLocalRequest().getSession().setAttribute("session",
+					getNewLocalSession(configFilePath, homeDirPath, workSpace, userName, password));
+		}
+		catch (Exception e)
+		{
 			log.info("Failed Login. " + e.getMessage());
-			throw new SerializedException(e.getMessage());
+			throw new Exception(e.getMessage());
 		}
 		return true;
 	}
 	
+	public Boolean loginViaJndi(String jndiName, String jndiContext, String workSpace, String userName,
+			String password) throws Exception
+	{
+		try
+		{
+			getThreadLocalRequest().getSession().setAttribute("session",
+					getNewSessionViaJndi(jndiName, jndiContext, workSpace, userName, password));
+		}
+		catch (Exception e)
+		{
+			log.info("Failed Login. " + e.getMessage());
+			throw new Exception(e.getMessage());
+		}
+		return true;
+	}
+	
+	public Boolean loginViaRmi(String rmiUrl, String workSpace, String userName,
+			String password) throws Exception
+	{
+		try
+		{
+			getThreadLocalRequest().getSession().setAttribute("session",
+					getNewSessionViaRmi(rmiUrl, workSpace, userName, password));
+		}
+		catch (Exception e)
+		{
+			log.info("Failed Login. " + e.getMessage());
+			throw new Exception(e.getMessage());
+		}
+		return true;
+	}
+
 	/**
-	 * Retrive the node type icon mappings from properties files
+	 * Retrieve the node type icon mappings from properties file
 	 */
 	public List<Map<String, String>> getNodeTypeIcons() throws SerializedException {
 		Properties properties = new Properties();
@@ -175,6 +285,28 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 		}		
 		
 		return returnList;
+	}
+
+	/**
+	 * Retrieve the supported connection types and default values from properties file
+	 */
+	private Map<String, String> getConnectionProperties() throws Exception {
+		Properties properties = new Properties();
+		try {
+			properties.load(new FileInputStream(getServletContext().getRealPath("/WEB-INF") + "/connectionTypes.properties"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new SerializedException(e.getMessage());
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new SerializedException(e.getMessage());
+		}
+		Map<String, String> propertiesMap = new HashMap<String, String>();
+		for(ConnectionProperties property : ConnectionProperties.values()) {
+			log.debug(property.key + " = " + properties.getProperty(property.key, ""));
+			propertiesMap.put(property.key, properties.getProperty(property.key, ""));
+		}
+		return propertiesMap;
 	}
 
 	/*

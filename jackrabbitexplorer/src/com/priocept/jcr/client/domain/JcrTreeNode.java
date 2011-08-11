@@ -30,7 +30,8 @@ public class JcrTreeNode extends TreeNode implements Serializable {
 		setAttribute("path", path);
 		setAttribute("primaryNodeType", primaryNodeType);
 		this.properties = properties;
-		setAttribute("treeGridIcon", JackrabbitExplorer.defaultIcon);
+		//setAttribute("treeGridIcon", JackrabbitExplorer.defaultIcon);
+		setAttribute("treeGridIcon", treeGridIcon);
 		setChildren(children);
 	}
 

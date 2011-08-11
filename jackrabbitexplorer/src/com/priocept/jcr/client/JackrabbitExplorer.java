@@ -2,6 +2,7 @@ package com.priocept.jcr.client;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,9 +40,12 @@ import com.smartgwt.client.widgets.events.DropHandler;
 import com.smartgwt.client.widgets.form.DynamicForm;
 import com.smartgwt.client.widgets.form.events.SubmitValuesHandler;
 import com.smartgwt.client.widgets.form.fields.PasswordItem;
+import com.smartgwt.client.widgets.form.fields.RadioGroupItem;
 import com.smartgwt.client.widgets.form.fields.SpacerItem;
 import com.smartgwt.client.widgets.form.fields.SubmitItem;
 import com.smartgwt.client.widgets.form.fields.TextItem;
+import com.smartgwt.client.widgets.form.fields.events.ChangedEvent;
+import com.smartgwt.client.widgets.form.fields.events.ChangedHandler;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
@@ -628,6 +632,12 @@ public class JackrabbitExplorer implements EntryPoint {
 		return rightClickMenu;
 	}
 	
+
+	private RadioGroupItem connectionType = new RadioGroupItem();
+	private TextItem configFilePathTxt = new TextItem();
+	private TextItem homeDirPathTxt = new TextItem();
+	private TextItem jndiNameTxt = new TextItem();
+	private TextItem jndiContextTxt = new TextItem();
 	private TextItem rmiUrlTxt = new TextItem();
 	private TextItem workspaceTxt = new TextItem();
 	private TextItem usernameTxt = new TextItem();
@@ -637,11 +647,167 @@ public class JackrabbitExplorer implements EntryPoint {
 		loginForm.setID("loginForm");
 		loginForm.setNumCols(2);
 		loginForm.setPadding(25);
+
+		LinkedHashMap<String, String> connectionMap = new LinkedHashMap<String, String>();
+		
+		String defaultValue = "3";
+		
+		// Examine logindetails here to find what to show. . . 
+		if(loginDetails.isSupportsLocalRepository()) {
+			connectionMap.put("1", "Local");
+			defaultValue = "1";
+		}
+		if(loginDetails.isSupportsJndiRepository()) {
+			connectionMap.put("2", "JNDI");
+			defaultValue = "2";
+		}
+		if(loginDetails.isSupportsRmiRepository()) {
+			connectionMap.put("3", "RMI");
+			defaultValue = "3";
+		}
+		
+		connectionType.setDefaultValue(defaultValue);
+
+		connectionType.setTitle("Connection");
+		connectionType.setValueMap(connectionMap);
+		connectionType.setRedrawOnChange(true);
+		connectionType.setRequired(true);
+		connectionType.setVertical(false);
+
+		configFilePathTxt.setName("configFilePathTxt");
+		configFilePathTxt.setTitle("Config file");
+		configFilePathTxt.setDefaultValue(loginDetails.getConfigFilePath());
+		configFilePathTxt.setWidth(250);
+		configFilePathTxt.setRequired(false);
+		configFilePathTxt.setVisible(false);
+		homeDirPathTxt.setName("homeDirPathTxt");
+		homeDirPathTxt.setTitle("Home directory");
+		homeDirPathTxt.setDefaultValue(loginDetails.getHomeDirPath());
+		homeDirPathTxt.setWidth(250);
+		homeDirPathTxt.setRequired(false);
+		homeDirPathTxt.setVisible(false);
+		jndiNameTxt.setName("jndiNameTxt");
+		jndiNameTxt.setTitle("JNDI name");
+		jndiNameTxt.setDefaultValue(loginDetails.getJndiName());
+		jndiNameTxt.setWidth(250);
+		jndiNameTxt.setRequired(false);
+		jndiNameTxt.setVisible(false);
+		jndiContextTxt.setName("jndiContextTxt");
+		jndiContextTxt.setTitle("JNDI context");
+		jndiContextTxt.setDefaultValue(loginDetails.getJndiContext());
+		jndiContextTxt.setWidth(250);
+		jndiContextTxt.setRequired(false);
+		jndiContextTxt.setVisible(false);
 		rmiUrlTxt.setName("rmiUrlTxt");
 		rmiUrlTxt.setTitle("RMI URL");
 		rmiUrlTxt.setDefaultValue(loginDetails.getRmiUrl());
 		rmiUrlTxt.setWidth(250);
-		rmiUrlTxt.setRequired(true);
+		rmiUrlTxt.setRequired(false);
+		rmiUrlTxt.setVisible(false);
+		final SpacerItem rmiSpacer = new SpacerItem();
+		rmiSpacer.setStartRow(true);
+		rmiSpacer.setEndRow(true);
+		rmiSpacer.setVisible(false);
+
+		connectionType.addChangedHandler(new ChangedHandler()
+		{
+			public void onChanged(ChangedEvent event)
+			{
+				if(connectionType.getValue().equals("1"))
+				{
+					jndiNameTxt.setRequired(false);
+					jndiNameTxt.setVisible(false);
+					jndiContextTxt.setRequired(false);
+					jndiContextTxt.setVisible(false);
+					rmiUrlTxt.setRequired(false);
+					rmiUrlTxt.setVisible(false);
+					rmiSpacer.setVisible(false);
+					
+					configFilePathTxt.setVisible(true);
+					configFilePathTxt.setRequired(true);
+					homeDirPathTxt.setVisible(true);
+					homeDirPathTxt.setRequired(true);
+				}
+				else if(connectionType.getValue().equals("2"))
+				{
+					configFilePathTxt.setRequired(false);
+					configFilePathTxt.setVisible(false);
+					homeDirPathTxt.setRequired(false);
+					homeDirPathTxt.setVisible(false);
+					rmiUrlTxt.setRequired(false);
+					rmiUrlTxt.setVisible(false);
+					rmiSpacer.setVisible(false);
+					
+					jndiNameTxt.setVisible(true);
+					jndiNameTxt.setRequired(true);
+					jndiContextTxt.setVisible(true);
+					jndiContextTxt.setRequired(true);
+				}
+				else
+				{
+					configFilePathTxt.setRequired(false);
+					configFilePathTxt.setVisible(false);
+					homeDirPathTxt.setRequired(false);
+					homeDirPathTxt.setVisible(false);
+					jndiNameTxt.setRequired(false);
+					jndiNameTxt.setVisible(false);
+					jndiContextTxt.setRequired(false);
+					jndiContextTxt.setVisible(false);
+					
+					rmiUrlTxt.setVisible(true);
+					rmiUrlTxt.setRequired(true);
+					rmiSpacer.setVisible(true);
+				}
+			}
+		});
+		
+//		//Set up view of login panel as appropriate
+		if(defaultValue.equals("1"))
+		{
+			jndiNameTxt.setRequired(false);
+			jndiNameTxt.setVisible(false);
+			jndiContextTxt.setRequired(false);
+			jndiContextTxt.setVisible(false);
+			rmiUrlTxt.setRequired(false);
+			rmiUrlTxt.setVisible(false);
+			rmiSpacer.setVisible(false);
+			
+			configFilePathTxt.setVisible(true);
+			configFilePathTxt.setRequired(true);
+			homeDirPathTxt.setVisible(true);
+			homeDirPathTxt.setRequired(true);
+		}
+		else if(defaultValue.equals("2"))
+		{
+			configFilePathTxt.setRequired(false);
+			configFilePathTxt.setVisible(false);
+			homeDirPathTxt.setRequired(false);
+			homeDirPathTxt.setVisible(false);
+			rmiUrlTxt.setRequired(false);
+			rmiUrlTxt.setVisible(false);
+			rmiSpacer.setVisible(false);
+			
+			jndiNameTxt.setVisible(true);
+			jndiNameTxt.setRequired(true);
+			jndiContextTxt.setVisible(true);
+			jndiContextTxt.setRequired(true);
+		}
+		else
+		{
+			configFilePathTxt.setRequired(false);
+			configFilePathTxt.setVisible(false);
+			homeDirPathTxt.setRequired(false);
+			homeDirPathTxt.setVisible(false);
+			jndiNameTxt.setRequired(false);
+			jndiNameTxt.setVisible(false);
+			jndiContextTxt.setRequired(false);
+			jndiContextTxt.setVisible(false);
+			
+			rmiUrlTxt.setVisible(true);
+			rmiUrlTxt.setRequired(true);
+			rmiSpacer.setVisible(true);
+		}
+
 		workspaceTxt.setName("workspaceTxt");
 		workspaceTxt.setTitle("Workspace");
 		workspaceTxt.setDefaultValue(loginDetails.getWorkSpace());
@@ -677,18 +843,49 @@ public class JackrabbitExplorer implements EntryPoint {
 	        	if (loginForm.validate()) {
 		    		loginWindow.hide();
 		        	showLoadingImg();
-		        	String rmiUrlText = rmiUrlTxt.getValue().toString(); 
-		        	String workspaceText = workspaceTxt.getValue().toString();
-		        	String usernameText = usernameTxt.getValue().toString();
-		        	String passwordText = passwordTxt.getValue() != null ? passwordTxt.getValue().toString() : "";
+
+					if(connectionType.getValue().equals("1"))
+					{
+						service.loginLocal(configFilePathTxt.getValue().toString(), homeDirPathTxt.getValue().toString(),
+								workspaceTxt.getValue().toString(), usernameTxt.getValue()
+								.toString(), passwordTxt.getValue().toString(),
+								new LoginServiceCallback(jackrabbitExplorer));							
+					}
+					else if(connectionType.getValue().equals("2"))
+					{
+						service.loginViaJndi(jndiNameTxt.getValue().toString(), jndiContextTxt.getValue().toString(),
+								workspaceTxt.getValue().toString(), usernameTxt.getValue()
+								.toString(), passwordTxt.getValue().toString(),
+								new LoginServiceCallback(jackrabbitExplorer));						
+					}
+					else
+					{
+						service.loginViaRmi(rmiUrlTxt.getValue().toString(), workspaceTxt
+								.getValue().toString(), usernameTxt.getValue()
+								.toString(), passwordTxt.getValue().toString(),
+								new LoginServiceCallback(jackrabbitExplorer));
+					}
+					
+//					drawMainLayout();
+
 		        	
-		        	service.login(rmiUrlText, workspaceText,usernameText, passwordText, new LoginServiceCallback(jackrabbitExplorer));
+		        	
+//		        	String rmiUrlText = rmiUrlTxt.getValue().toString(); 
+//		        	String workspaceText = workspaceTxt.getValue().toString();
+//		        	String usernameText = usernameTxt.getValue().toString();
+//		        	String passwordText = passwordTxt.getValue() != null ? passwordTxt.getValue().toString() : "";
+//		        	
+//		        	service.login(rmiUrlText, workspaceText,usernameText, passwordText, new LoginServiceCallback(jackrabbitExplorer));
 	        	}
 	      }  
 	    };
 	    loginForm.addSubmitValuesHandler(new LoginSubmitValuesHandler(this));
 	    loginForm.setSaveOnEnter(true);
-	    loginForm.setItems(rmiUrlTxt, workspaceTxt, spacerItem1, usernameTxt, passwordTxt, spacerItem1, spacerItem2, loginSubmitItem);
+	    //loginForm.setItems(rmiUrlTxt, workspaceTxt, spacerItem1, usernameTxt, passwordTxt, spacerItem1, spacerItem2, loginSubmitItem);
+
+	    loginForm.setItems(connectionType, spacerItem1, configFilePathTxt, homeDirPathTxt, jndiNameTxt, jndiContextTxt, rmiUrlTxt, rmiSpacer, spacerItem1, usernameTxt,
+				passwordTxt, workspaceTxt, spacerItem1, spacerItem2, loginSubmitItem);
+
 	    vStack.setTop(30);
 	    vStack.addMember(loginForm);
 	    loginWindow.addChild(vStack);
@@ -697,8 +894,8 @@ public class JackrabbitExplorer implements EntryPoint {
 	    loginWindow.setCanDragResize(false);
 	    loginWindow.setShowMinimizeButton(false);
 	    loginWindow.setShowCloseButton(false);
-	    loginWindow.setHeight(260);
-	    loginWindow.setWidth(380);
+	    loginWindow.setHeight(350);
+	    loginWindow.setWidth(400);
 	    loginWindow.setAutoCenter(true);
 	    loginWindow.show();
 	    usernameTxt.focusInItem();

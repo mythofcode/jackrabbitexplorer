@@ -11,7 +11,9 @@ import com.priocept.jcr.client.domain.LoginDetails;
 @RemoteServiceRelativePath("JcrService")
 public interface JcrService extends RemoteService {
 	LoginDetails getDefaultLoginDetails() throws SerializedException;
-	Boolean login(String rmiUrl, String workSpace, String userName, String password) throws SerializedException;
+	Boolean loginLocal(String configFilePath, String homeDirPath, String workSpace, String userName, String password) throws Exception;
+	Boolean loginViaJndi(String jndiName, String jndiContext, String workSpace, String userName, String password) throws Exception;
+	Boolean loginViaRmi(String rmiUrl, String workSpace, String userName, String password) throws Exception;
 	List<Map<String, List<JcrNode>>> getNodeTree(String path) throws SerializedException;
 	List<JcrNode> getNode(String path) throws SerializedException;
 	List<String> getAvailableNodeTypes() throws SerializedException;

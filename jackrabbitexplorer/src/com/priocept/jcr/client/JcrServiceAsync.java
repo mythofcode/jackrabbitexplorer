@@ -9,7 +9,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface JcrServiceAsync {
 	void getDefaultLoginDetails(AsyncCallback<LoginDetails> callback);
-	void login(String rmiUrl, String workSpace, String userName, String password, AsyncCallback<Boolean> callback);
+	void loginLocal(String configFilePath, String homeDirPath, String workSpace, String userName, String password, AsyncCallback<Boolean> callback);
+	void loginViaJndi(String jndiName, String jndiContext, String workSpace, String userName, String password, AsyncCallback<Boolean> callback);
+	void loginViaRmi(String rmiUrl, String workSpace, String userName, String password, AsyncCallback<Boolean> callback);
 	void getNodeTree(String path, AsyncCallback<List<Map<String, List<JcrNode>>>> callback);
 	void getNode(String path, AsyncCallback<List<JcrNode>> callback);
 	void getAvailableNodeTypes(AsyncCallback<List<String>> callback);
