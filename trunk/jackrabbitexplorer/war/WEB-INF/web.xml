@@ -5,24 +5,6 @@
 
 	<display-name>jackrabbitexplorer</display-name>
 
-	<!-- Default login page details -->
-	<context-param>
-	  <param-name>rmiUrl</param-name>
-	  <param-value>http://localhost:8082/rmi</param-value>
-	</context-param>
-	  <context-param>
-	  <param-name>workSpace</param-name>
-	  <param-value>default</param-value>
-	</context-param>
-	  <context-param>
-	  <param-name>userName</param-name>
-	  <param-value>admin</param-value>
-	</context-param>
-	<context-param>
-	  <param-name>password</param-name>
-	  <param-value>admin</param-value>
-	</context-param>
-	
 	<!-- Admin username and password used by the binary servlet -->
 	<context-param>
 	  <param-name>adminUserName</param-name>
