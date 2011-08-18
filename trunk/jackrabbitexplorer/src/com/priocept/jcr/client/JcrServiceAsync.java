@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.priocept.jcr.client.domain.JcrNode;
 import com.priocept.jcr.client.domain.LoginDetails;
+import com.priocept.jcr.client.domain.RemoteFile;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface JcrServiceAsync {
@@ -35,4 +36,7 @@ public interface JcrServiceAsync {
 	void addNodeTypes(String cnd, AsyncCallback<Boolean> callback);
 	void getNodeTypeIcons(AsyncCallback<List<Map<String, String>>> callback);
 	void getBrowsableContentFilterRegex(AsyncCallback<String> callback);
+	void getPossibleIconPaths(String path, AsyncCallback<List<RemoteFile>> callback);
+	void changeNodeTypeIconAssociation(String nodeType, String iconPath, AsyncCallback<Boolean> callback);
 }
+

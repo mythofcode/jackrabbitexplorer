@@ -3,10 +3,12 @@ package com.priocept.jcr.client;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.priocept.jcr.client.domain.JcrNode;
 import com.priocept.jcr.client.domain.LoginDetails;
+import com.priocept.jcr.client.domain.RemoteFile;
 
 @RemoteServiceRelativePath("JcrService")
 public interface JcrService extends RemoteService {
@@ -37,4 +39,6 @@ public interface JcrService extends RemoteService {
 	Boolean addNodeTypes(String cnd) throws SerializedException;
 	List<Map<String, String>> getNodeTypeIcons() throws SerializedException;
 	String getBrowsableContentFilterRegex() throws SerializedException;
+	List<RemoteFile> getPossibleIconPaths(String path) throws SerializedException;
+	Boolean changeNodeTypeIconAssociation(String nodeType, String iconPath) throws SerializedException;
 }
