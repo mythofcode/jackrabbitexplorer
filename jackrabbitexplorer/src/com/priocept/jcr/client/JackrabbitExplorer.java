@@ -10,6 +10,7 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.priocept.jcr.client.callback.CRUDServiceCallback;
+import com.priocept.jcr.client.callback.ChangeNodeTypeIconAssociationCallback;
 import com.priocept.jcr.client.callback.DefaultLoginDetailsServiceCallback;
 import com.priocept.jcr.client.callback.GetBrowsableContentFilterRegexsServiceCallback;
 import com.priocept.jcr.client.callback.GetNodeServiceCallback;
@@ -17,8 +18,10 @@ import com.priocept.jcr.client.callback.GetNodeTreeServiceCallback;
 import com.priocept.jcr.client.callback.GetNodeTypeIconsServiceCallback;
 import com.priocept.jcr.client.callback.LoginServiceCallback;
 import com.priocept.jcr.client.callback.NewBooleanCallback;
+import com.priocept.jcr.client.callback.RemoteFileServiceCallback;
 import com.priocept.jcr.client.domain.JcrTreeNode;
 import com.priocept.jcr.client.domain.LoginDetails;
+import com.priocept.jcr.client.handler.IconGridHandler;
 import com.priocept.jcr.client.ui.AddNewNode;
 import com.priocept.jcr.client.ui.Details;
 import com.smartgwt.client.types.Alignment;
@@ -26,12 +29,14 @@ import com.smartgwt.client.types.ContentsType;
 import com.smartgwt.client.types.ImageStyle;
 import com.smartgwt.client.types.LayoutResizeBarPolicy;
 import com.smartgwt.client.types.ListGridEditEvent;
+import com.smartgwt.client.types.ListGridFieldType;
 import com.smartgwt.client.types.Overflow;
 import com.smartgwt.client.types.SelectionStyle;
 import com.smartgwt.client.types.TreeModelType;
 import com.smartgwt.client.types.VerticalAlignment;
 import com.smartgwt.client.util.BooleanCallback;
 import com.smartgwt.client.util.SC;
+import com.smartgwt.client.widgets.Button;
 import com.smartgwt.client.widgets.HTMLPane;
 import com.smartgwt.client.widgets.Img;
 import com.smartgwt.client.widgets.Label;
@@ -54,6 +59,8 @@ import com.smartgwt.client.widgets.grid.events.CellClickHandler;
 import com.smartgwt.client.widgets.grid.events.CellMouseDownHandler;
 import com.smartgwt.client.widgets.grid.events.CellSavedHandler;
 import com.smartgwt.client.widgets.layout.HLayout;
+import com.smartgwt.client.widgets.layout.HStack;
+import com.smartgwt.client.widgets.layout.Layout;
 import com.smartgwt.client.widgets.layout.VLayout;
 import com.smartgwt.client.widgets.layout.VStack;
 import com.smartgwt.client.widgets.menu.Menu;
@@ -88,11 +95,14 @@ public class JackrabbitExplorer implements EntryPoint {
 	public TabSet bottomRightTabSet = new TabSet();
 	private ListGrid propertiesListGrid = new ListGrid();  
 	private ListGridRecord[] propertiesListGridRecords = new ListGridRecord[]{};
-	public ListGrid searchResultsListGrid = new ListGrid();  
+	public ListGrid searchResultsListGrid = new ListGrid();
+	private ListGrid remoteIconFilesListGrid = new ListGrid();
+	private Window possibleIconsWindow = createPossibleIconsWindow(remoteIconFilesListGrid);
 	private String sourcePath = "";
 	private String destinationPath = "";
 	private String copyCellPath = null;
 	private String cutCellPath = null;
+	private String changeIconCellType = null;
 	private String deleteCellPath = null;
 	public static TreeGrid cellMouseDownTreeGrid;
 	public static Window loginWindow = new Window();
@@ -113,6 +123,10 @@ public class JackrabbitExplorer implements EntryPoint {
 
 	}
 	
+	public ListGrid getRemoteIconFilesListGrid() {
+		return remoteIconFilesListGrid;
+	}
+
 	private static HLayout mainLayout = new HLayout();
 	public void onModuleLoad() {
 		try {
@@ -123,12 +137,16 @@ public class JackrabbitExplorer implements EntryPoint {
 			SC.warn("There was an error: " + e.getMessage(), new NewBooleanCallback());
 		}
 		service.getDefaultLoginDetails(new DefaultLoginDetailsServiceCallback(this));
-		service.getNodeTypeIcons(new GetNodeTypeIconsServiceCallback());
+		getNodeTypeIcons();
 		service.getBrowsableContentFilterRegex(new GetBrowsableContentFilterRegexsServiceCallback());
 		mainLayout.setWidth("100%");
 		mainLayout.setHeight("100%");
 		mainLayout.setBackgroundColor("#F0F0F0");
 		mainLayout.draw();
+	}
+	
+	public void getNodeTypeIcons() {
+		service.getNodeTypeIcons(new GetNodeTypeIconsServiceCallback());
 	}
 	
 	public void drawMainLayout() {
@@ -187,6 +205,10 @@ public class JackrabbitExplorer implements EntryPoint {
 	public static void hideLoadingImg() {
 		loadingImg.hide();
 		hideDisableLayer();
+	}
+
+	public void refreshFromRoot() {
+		treeRecordClick(null, true, "");
 	}
 
 	public void treeRecordClick(TreeGrid selectedTreeGrid, boolean refresh, String parentPath) {
@@ -256,7 +278,7 @@ public class JackrabbitExplorer implements EntryPoint {
 	    }
 	    propertiesListGrid.setData(propertiesListGridRecords);
 	    Details.addNodeSubmitItem.setDisabled(false);
-	    Details.addPropertySubmitItem.setDisabled(false);
+	    Details.addPropertySubmitItem.setDisabled(false);	    
 	}
 	
 	public void treeDeleteUpdate(String parentPath) {
@@ -366,6 +388,22 @@ public class JackrabbitExplorer implements EntryPoint {
 			}
 		};
 		newMenuItem.addClickHandler(new NewClickHandler(this));
+
+		MenuItem changeIconMenuItem = new MenuItem("Change Icon for Type", "icons/pencil.png", "Ctrl+I");
+		class ChangeClickHandler implements com.smartgwt.client.widgets.menu.events.ClickHandler {
+			JackrabbitExplorer jackrabbitExplorer = null;
+			ChangeClickHandler(JackrabbitExplorer jackrabbitExplorer) {
+				this.jackrabbitExplorer = jackrabbitExplorer;
+			}
+			public void onClick(com.smartgwt.client.widgets.menu.events.MenuItemClickEvent event) {
+				TreeGrid selectedJcrTreeGrid = (TreeGrid) event.getTarget();				
+				changeIconCellType = selectedJcrTreeGrid.getSelectedRecord().getAttribute("primaryNodeType");
+				showLoadingImg();
+				jackrabbitExplorer.showPossibleIcons(null);
+			}
+		};
+		changeIconMenuItem.addClickHandler(new ChangeClickHandler(this));
+
 		MenuItem cutMenuItem = new MenuItem("Cut", "icons/cut.png", "Ctrl+X");
 		class cutClickHandler implements com.smartgwt.client.widgets.menu.events.ClickHandler {
 			public void onClick(com.smartgwt.client.widgets.menu.events.MenuItemClickEvent event) {
@@ -408,13 +446,13 @@ public class JackrabbitExplorer implements EntryPoint {
 		};
 		pasteMenuItem.addClickHandler(new PasteClickHandler(this));
 		MenuItem refreshMenuItem = new MenuItem("Refresh", "icons/refresh.png", "Ctrl+R");
-		class refreshClickHandler implements com.smartgwt.client.widgets.menu.events.ClickHandler {
+		class RefreshClickHandler implements com.smartgwt.client.widgets.menu.events.ClickHandler {
 			public void onClick(com.smartgwt.client.widgets.menu.events.MenuItemClickEvent event) {
 				TreeGrid selectedJcrTreeGrid = (TreeGrid) event.getTarget();
 				treeRecordClick(selectedJcrTreeGrid, true, null);
 			}
 		};
-		refreshMenuItem.addClickHandler(new refreshClickHandler());
+		refreshMenuItem.addClickHandler(new RefreshClickHandler());
 		MenuItem deleteMenuItem = new MenuItem("Delete", "icons/icon_remove_files.png");
 		class DeleteClickHandler implements com.smartgwt.client.widgets.menu.events.ClickHandler {
 	    	private JackrabbitExplorer jackrabbitExplorer;
@@ -438,7 +476,7 @@ public class JackrabbitExplorer implements EntryPoint {
 		};
 		deleteMenuItem.addClickHandler(new DeleteClickHandler(this));
 		rightClickMenu.setItems(newMenuItem, new MenuItemSeparator(), refreshMenuItem, new MenuItemSeparator(),
-				cutMenuItem, copyMenuItem, pasteMenuItem, new MenuItemSeparator(), deleteMenuItem);
+				cutMenuItem, copyMenuItem, pasteMenuItem, new MenuItemSeparator(), changeIconMenuItem, new MenuItemSeparator(), deleteMenuItem);
 		return rightClickMenu;
 	}
 	
@@ -470,6 +508,80 @@ public class JackrabbitExplorer implements EntryPoint {
 		return searchResultsTab;
 	}
 	
+	private Window createPossibleIconsWindow(ListGrid listGrid) {
+		Window changeNodeTypeWindow = new Window();
+		changeNodeTypeWindow.setShowMinimizeButton(false);  
+		changeNodeTypeWindow.setIsModal(true);  
+		changeNodeTypeWindow.setShowModalMask(true);  
+		changeNodeTypeWindow.setTitle("Change Node Type Icon");
+		changeNodeTypeWindow.setCanDragReposition(true);
+		changeNodeTypeWindow.setCanDragResize(false);
+		changeNodeTypeWindow.setAutoCenter(true);
+		changeNodeTypeWindow.setWidth(500);
+		changeNodeTypeWindow.setHeight(400);
+		changeNodeTypeWindow.setAlign(VerticalAlignment.BOTTOM);
+
+		Layout verticalStack = new VStack();
+		verticalStack.setHeight100();
+		verticalStack.setWidth100();
+		verticalStack.setPadding(10);
+		verticalStack.setAlign(VerticalAlignment.BOTTOM);
+
+		listGrid.setHeight(300);  
+		listGrid.setAlternateRecordStyles(true);  
+		listGrid.setShowAllRecords(true);  
+		listGrid.setCanEdit(false);  
+		listGrid.setEditByCell(false); 
+		listGrid.setShowHover(true);
+		ListGridField iconField = new ListGridField("imagePath", "Icon");
+		iconField.setAlign(Alignment.CENTER);  
+		iconField.setType(ListGridFieldType.IMAGE);
+		iconField.setImageURLPrefix("");
+		iconField.setWidth("40");
+		ListGridField pathField = new ListGridField("path", "Path");  
+        pathField.setShowHover(true);
+        listGrid.setFields(iconField, pathField);  
+        listGrid.setCanResizeFields(false);  
+        listGrid.setWidth100();
+        listGrid.addCellClickHandler(new IconGridHandler(this));
+
+        HStack horizontalStack = new HStack();
+        //horizontalStack.setHeight(50);
+        horizontalStack.setAutoHeight();
+        horizontalStack.setWidth100();
+        horizontalStack.setPadding(10);
+        horizontalStack.setAlign(Alignment.RIGHT);
+
+        Button cancelButton = new Button("Cancel");
+
+        class CancelClickHandler implements com.smartgwt.client.widgets.events.ClickHandler {
+			JackrabbitExplorer jackrabbitExplorer = null;
+			CancelClickHandler(JackrabbitExplorer jackrabbitExplorer) {
+				this.jackrabbitExplorer = jackrabbitExplorer;
+			}
+			public void onClick(com.smartgwt.client.widgets.events.ClickEvent event) {
+				jackrabbitExplorer.hidePossibleIconsWindow();
+			}
+		};
+		
+        cancelButton.addClickHandler(new CancelClickHandler(this));
+        horizontalStack.addMember(cancelButton);
+
+        verticalStack.addMember(listGrid);
+        verticalStack.addMember(horizontalStack);
+
+		changeNodeTypeWindow.addItem(verticalStack);
+		return changeNodeTypeWindow;
+	}
+	
+	public void showPossibleIconsWindow() {
+		possibleIconsWindow.show();
+	}
+
+	public void hidePossibleIconsWindow() {
+		possibleIconsWindow.hide();
+	}
+
     class SearchResultsClickClickHandler implements com.smartgwt.client.widgets.events.ClickHandler {
     	private JackrabbitExplorer jackrabbitExplorer;
     	public SearchResultsClickClickHandler(JackrabbitExplorer jackrabbitExplorer) {
@@ -900,5 +1012,17 @@ public class JackrabbitExplorer implements EntryPoint {
 	    loginWindow.show();
 	    usernameTxt.focusInItem();
 	}
-	
+
+	private void showPossibleIcons(String path) {
+		showLoadingImg();
+		service.getPossibleIconPaths(path, new RemoteFileServiceCallback(this));
+	}
+
+	public void changeCurrentNodeTypeAssociation(String iconPath) {
+		changeNodeTypeIconAssociation(changeIconCellType, iconPath);
+	}
+
+	private void changeNodeTypeIconAssociation(String nodeType, String iconPath) {
+		service.changeNodeTypeIconAssociation(nodeType, iconPath, new ChangeNodeTypeIconAssociationCallback(this));
+	}
 }

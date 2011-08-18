@@ -3,8 +3,10 @@ package com.priocept.jcr.server;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,6 +42,7 @@ import com.priocept.jcr.client.JcrService;
 import com.priocept.jcr.client.SerializedException;
 import com.priocept.jcr.client.domain.JcrNode;
 import com.priocept.jcr.client.domain.LoginDetails;
+import com.priocept.jcr.client.domain.RemoteFile;
 
 /**
  * 
@@ -55,6 +58,10 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	private final static String SQL_SEARCH = "sqlSearch";
 	private final static String TEMP_FILES = "temp_files/";
 	private static String REAL_ABSOLUTE_PATH = "";
+	private static final String DEFAULT_ICON_PATH_PREFIX = "images";
+	private static final String DEFAULT_ICON_PATH = "customicons";
+	private static final String NODETYPE_ICONS_PROPERTIES_FILE = "nodeTypeIcons.properties";
+	private static final String CONNECTIONS_PROPERTIES_FILE = "connectionTypes.properties";
 
 	protected Session getJcrSession() throws Exception {
 		if (null == getThreadLocalRequest().getSession().getAttribute("session")) {
@@ -267,12 +274,12 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	public List<Map<String, String>> getNodeTypeIcons() throws SerializedException {
 		Properties properties = new Properties();
 		try {
-			properties.load(new FileInputStream(getServletContext().getRealPath("/WEB-INF") + "/nodeTypeIcons.properties"));
+			properties.load(new FileInputStream(getServletContext().getRealPath("/WEB-INF") + File.separator + NODETYPE_ICONS_PROPERTIES_FILE));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			log.error("Unable to find " + NODETYPE_ICONS_PROPERTIES_FILE, e);
 			throw new SerializedException(e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("Error reading " + NODETYPE_ICONS_PROPERTIES_FILE, e);
 			throw new SerializedException(e.getMessage());
 		}
 		List<Map<String, String>> returnList = new ArrayList<Map<String, String>>();
@@ -293,12 +300,12 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 	private Map<String, String> getConnectionProperties() throws Exception {
 		Properties properties = new Properties();
 		try {
-			properties.load(new FileInputStream(getServletContext().getRealPath("/WEB-INF") + "/connectionTypes.properties"));
+			properties.load(new FileInputStream(getServletContext().getRealPath("/WEB-INF") + File.separator + CONNECTIONS_PROPERTIES_FILE));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			log.error("Unable to find " + CONNECTIONS_PROPERTIES_FILE, e);
 			throw new SerializedException(e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("Error reading " + CONNECTIONS_PROPERTIES_FILE, e);
 			throw new SerializedException(e.getMessage());
 		}
 		Map<String, String> propertiesMap = new HashMap<String, String>();
@@ -852,5 +859,72 @@ public class JcrServiceImpl extends RemoteServiceServlet implements JcrService {
 		
 		return true;
 		*/
-	}	
+	}
+
+	@Override
+	public List<RemoteFile> getPossibleIconPaths(String path) throws SerializedException {
+		if(path == null) {
+			path = DEFAULT_ICON_PATH;
+		}
+		String rootOfPath = getServletContext().getRealPath("/");
+		File file = new File(rootOfPath + DEFAULT_ICON_PATH_PREFIX + File.separator + DEFAULT_ICON_PATH);
+		List<RemoteFile> children = new ArrayList<RemoteFile>();
+
+		//SmartGWT prefixes all generated image paths with "images/" so we must remove this part of the path.
+		int charactersToRemove = new String(rootOfPath + DEFAULT_ICON_PATH_PREFIX + File.separator).length();
+
+		for(File child : file.listFiles())
+		{
+			if(!child.isDirectory()) {
+				String fullPath = child.getPath();
+				String relativePath = fullPath.substring(charactersToRemove);			
+				RemoteFile remoteFile = new RemoteFile(relativePath, child.isDirectory());
+				children.add(remoteFile);
+			}
+		}
+		return children;
+	}
+
+	@Override
+	public Boolean changeNodeTypeIconAssociation(String nodeType, String iconPath) throws SerializedException {
+		Properties properties = new Properties();
+		InputStream inputStream = null;
+		OutputStream outputStream = null;
+		try {
+			inputStream = new FileInputStream(getServletContext().getRealPath(File.separator + "WEB-INF") + File.separator + NODETYPE_ICONS_PROPERTIES_FILE);
+			properties.load(inputStream);
+			outputStream = new FileOutputStream(getServletContext().getRealPath(File.separator + "WEB-INF") + File.separator + NODETYPE_ICONS_PROPERTIES_FILE);
+
+			//Correct iconpath to be a URL path
+			iconPath = iconPath.replaceAll("\\\\", "\\/");
+
+			properties.setProperty(nodeType, iconPath);			
+			properties.store(outputStream, null);
+		} catch (FileNotFoundException e) {
+			log.error("Unable to find " + NODETYPE_ICONS_PROPERTIES_FILE + " : ", e);
+			throw new SerializedException(e.getMessage());
+		} catch (IOException e) {
+			log.error("Exception reading/writing " + NODETYPE_ICONS_PROPERTIES_FILE + " : ", e);
+			throw new SerializedException(e.getMessage());
+		}
+		finally{
+			if(inputStream != null) {
+				try {
+					inputStream.close();
+				}
+				catch(Exception e) {
+					log.error("Exception closing input stream from " + NODETYPE_ICONS_PROPERTIES_FILE, e);
+				}
+			}
+			if(outputStream != null) {
+				try {
+					outputStream.close();
+				}
+				catch(Exception e) {
+					log.error("Exception closing output stream to " + NODETYPE_ICONS_PROPERTIES_FILE, e);
+				}
+			}
+		}
+		return true;
+	}
 }
